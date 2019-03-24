@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-import os
-import colorama
-import leakz
-import requests
+#!/usr/bin/python3
+import json, requests
+from os import name
 
 try:
     input = raw_input
@@ -48,40 +46,43 @@ def leaked():
    \ \_______\ \_______\ \__\ \__\ \__\\ \__\ \_______\ \_______\       ___ 
     \|_______|\|_______|\|__|\|__|\|__| \|__|\|_______|\|_______|      |\__\\
                                                                         \|__| 2.1
-     A Checking tool for Hash codes, Passwords and Emails leaked
-     """)
+     A Checking tool for Hash codes, Passwords and Emails leaked""")
 
 def menu():
     try:
+        leaked()
+        print()
         print("""\033[96mWhat do you want to check?
     1. Password Hashes      4. Grabb email passwords
     2. Hash Leaked          5. About Author
     3, Email Leaked         6. Exit (or just need Crtl+C)
     """)
 
-        choice = input('Enter your choice (1-7): ')
+        choice = input('Enter your choice (1-6): ')
         if choice == '1':
-            password = input('\nEnter or paste a password you want to check: ')
-            hashs = leakz.hashes_from_password(password)
-            print("""\n\033[93mIT LEAKED!!! The Hash codes of the Password is:
-[-] MD5: """ + hashs['md5'] + """
-[-] SHA1: """ + hashs['sha1'] + """
-[-] SHA224: """ + hashs['sha224'] + """
-[-] SHA256: """ + hashs['sha256'] + """
-[-] SHA384: """ + hashs['sha384'] + """
-[-] SHA512: """ + hashs['sha512'] + """""")
+            password = input('Enter or paste a password you want to check: ')
+            non_hash = requests.get('https://lea.kz/api/password/'+password)
+            js = json.loads(non_hash.text)
+            print("""\033[93mIT LEAKED!!! The Hash codes of the Password is:
+MD5: """+js['md5']+"""
+SHA1: """+js['sha1']+"""
+SHA224: """+js['sha224']+"""
+SHA256: """+js['sha256']+"""
+SHA384: """+js['sha384']+"""
+SHA512: """+js['sha512']+"""""")
             back()
 
         elif choice == '2':
-            hashcode = input('\nEnter or paste a hash code you want to check: ')
-            passwd = leakz.password_from_hash(hashcode)
-            print(
-                '\n\033[93m[-] THAT HASH CODE HAS BEEN LEAKED! It means:',passwd)
+            code = input('Enter or paste a hash code you want to check: ')
+            password = requests.get('https://lea.kz/api/hash/'+code)
+            js = json.loads(password.text)
+            print('\033[93mTHAT HASH CODE IS LEAKED! It means: '+js['password'])
             back()
 
         elif choice == '3':
             email = input('\nEnter or paste a email you want to check: ')
-            info = leakz.leaked_mail(email)
+            info = requests.gets(email)
+            js = json.loads(info.txt)
             print("""\n\033[93m[-] THIS EMAIL HAS BEEN LEAKED!
     It was used for:""",info)
             back()
@@ -114,24 +115,13 @@ def menu():
 
     except KeyboardInterrupt:
         back()
-    except leakz.exceptions.LeakzRequestException:
-        print('\033[91m[!] Your Internet Offline!!!')
-        exit(1)
-    except leakz.exceptions.LeakzNotLeaked:
-        print('\033[93m[+] Congratulations! It was not leaked!!!')
-        print()
-        menu()
-    except leakz.exceptions.LeakzJSONDecodeException:
-        print('\033[93m[+] Congratulations! It was not leaked!!!')
-        print()
-        menu()
-    except AttributeError:
-        print('\033[93m[+] Congratulations! It was not leaked!!!')
-        print()
-        menu()
 
-if __name__ == "__main__":
-    colorama.init()
-    clear()
-    leaked()
+    except requests.exceptions.ConnectionError:
+        print('\033[91mThe https://Lea.kz server has gone... or your Internet offline!!! You can only use "Grabb email passwords"')
+        exit
+    except json.decoder.JSONDecodeError:
+        print('\033[93mCongratulations! It was not leaked!!!')
+        print()
+        back()
+        
 menu()
